@@ -1,0 +1,117 @@
+---
+title: "Assignment 3"
+author: "Sivert Jakobsen"
+date: "28 10 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introduksjon 
+Haun et al. (2019) samlet inn data fra 30 menn i høyskolealer for å se på effekten av 6 uker med styrketrening med høy motstand hvor han så på hvordan flere fysiologiske parametere forandret seg. Etter pre-test ble de 20 med lavest og høyest respons delt inn i to grupper, HIGH- og LOW-responders. 
+
+I denne oppgaven skal jeg se på korrelasjonen mellom ulike variabbler i datasettet til Haun et al (2019). I del 1 vil jeg sammenligne metodene t-test og regresjonsanalyse. Del 2 vil handle om å se på forskjellen mellom muskelmasse og styrke ved hjelp av regresjon og korrelasjonsanalyse.  
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+### Last ned pakker ######
+library(tidyverse)
+library(knitr)
+library(broom)
+library(kableExtra)
+
+### Last inn data ####
+hypertrophy <- read.csv("./data/hypertrophy.csv", na = NA)
+```
+
+## Del 1 - t-test og regresjons analyse 
+Variablene som blir testet er AVG_CSA_T1. Denne variablene er tversnittarealet av vastus lateralis ved pre-test. I denne delen av oppgaven skal jeg sammenligne resultatene fra en t-test og regesjonsanalyse. 
+
+I disse testene vil vi se om det er en forskjell av tversnittarelaet mellom de to gruppene. For å gjennomføre t-testen setter vi to hypoteser. H0-hypotese: det er ingen signifikant forskjell mellom de to gruppene. H1-hypotese: det er en signifikant forskjell mellom de to gruppene. Resultatene av t-testen vises i tabellen under (tabell 1). 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+### Valg av data ####
+ 
+dat1 <- hypertrophy %>%
+  select(CLUSTER, AVG_CSA_T1) %>% # Velg data
+  mutate(CLUSTER = factor(CLUSTER, levels = c("LOW", "HIGH"))) %>%
+  drop_na(CLUSTER, AVG_CSA_T1) # Fjern NA
+ 
+
+### T-test ####
+ttest <- t.test(AVG_CSA_T1 ~ CLUSTER, paired = FALSE, data = dat1, var.equal = TRUE)
+
+p <- round(ttest$p.value, 3)
+
+tidy(ttest) %>%
+  select(-estimate, -alternative, -method) %>% # Fjern unødvendig data
+  kable(caption = "Tabell 1: T-test",
+        col.names = c("Gj.snitt LOW", 
+                      "Gj.snitt HIGH", 
+                      "T-verdi", 
+                      "P-verdi", 
+                      "DF", 
+                      "CI LOW", 
+                      "CI High")) # Gi nytt navn
+      
+```
+
+I tabell 1 ser vi gjennomsnittet av tversnittarealet hos de to gruppene LOW og HIGH. T-testen ga en p-verdi på p = `r p`. Dette vil si at det er en signifikant forskjell i tverrnittarealet hos de to gruppene. Regresjonsmodellen vises under (Tabell 2). 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Regresjon 
+regmod <- lm(AVG_CSA_T1 ~ CLUSTER, data = dat1)
+
+# Lag tabell
+tidy(regmod) %>%
+  kable(caption = "Tabell 2: Regresjons modell", 
+        col.names = c("", "Estimate", "SE", "t-statistic", "p-value"), 
+        digits = c(NA, 1, 1, 2, 3))
+
+```
+<br />
+Regresjonsmodellen ga en p-verdig på p = 0,013. Ut ifra dette kan vi tolke at t-testen og regresjons analysen viser at det er en signifikant forskjell mellom guppene. 
+
+## Del 2 - forholdet mellom muskelmasse og styrke
+I denne delen vil vi se om det er en sammenheng mellom muskelmasse og styrke i datasettet til Haun et.al. (2019). Vi henter ut variablene Squat_3RM_kg og AVG_CSA_T1. Disse sier noe om hvor mange kg forsøkspersonene klarer i 3RM og tversnittarealet av  vastus lateralis pre-test.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+### valg av data #####
+mus1 <- hypertrophy %>%
+  select("Squat_3RM_kg", "AVG_CSA_T1", "SUB_ID", "T1_BODY_MASS")
+
+### Lage diagram #####
+mus1 %>%
+  ggplot(aes(AVG_CSA_T1, Squat_3RM_kg)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, method = "lm")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Lagre correlasjonen i et objekt 
+c <- cor.test(mus1$Squat_3RM_kg, mus1$AVG_CSA_T1)
+
+tidy(c) %>% # Lag tabell
+  select(-alternative) %>% # Fjern det som ikke trenger å være med
+  kable(caption = "Tabell 3: Correlasjon")
+
+e <- round(c$estimate, 3)
+```
+
+Når man gjøre en korrelasjonstest vil man ha en verdi på 1 eller -1 for at det skal være en korrelasjon. Korrelasjonstesten Pearson viser til en correlasjon på `r e` som vi si at det er svært liten korrelasjon.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Lagre regresjon i et objekt 
+rm <- lm(Squat_3RM_kg ~ AVG_CSA_T1, data = mus1)
+
+tidy(rm) %>% # Lag tabell
+  kable(col.names = c("", "Estimate", "SE", "t-statistic", "p-value"), # Colum navn
+        digits = c(NA, 4, 4, 4, 4), # Bestemmer antall desimaler til hver verdi
+        caption = "Tabell 4: Regresjon")
+```
+
+Regresjonsmodellen viser diverse forskjellige verdier, men jeg sliter litt med hvordan jeg skal tolke dem. 
+Hvorfor blir tabellene så sammenklemt? Har sammenlignet det med flere andre og googlet, men finner ikke svar. 
+
+
+      
