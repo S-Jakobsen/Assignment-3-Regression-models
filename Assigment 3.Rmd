@@ -7,10 +7,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Introduksjon 
 Haun et al. (2019) samlet inn data fra 30 menn i høyskolealer for å se på effekten av 6 uker med styrketrening med høy motstand hvor han så på hvordan flere fysiologiske parametere forandret seg. Etter pre-test ble de 20 med lavest og høyest respons delt inn i to grupper, HIGH- og LOW-responders. 
 
@@ -21,7 +17,7 @@ I denne oppgaven skal jeg se på korrelasjonen mellom ulike variabbler i dataset
 library(tidyverse)
 library(knitr)
 library(broom)
-library(kableExtra)
+
 
 ### Last inn data ####
 hypertrophy <- read.csv("./data/hypertrophy.csv", na = NA)
@@ -118,7 +114,6 @@ tidy(rm) %>% # Lag tabell
 ```
 
 Regresjonsmodellen viser diverse forskjellige verdier, men jeg sliter litt med hvordan jeg skal tolke dem. 
-Hvorfor blir tabellene så sammenklemt? Har sammenlignet det med flere andre og googlet, men finner ikke svar. 
 
 
       
